@@ -8,8 +8,7 @@ import (
 var testStoreService = &StorageService{}
 
 func init() {
-	_store := InitializeStore()
-	testStoreService = _store
+	testStoreService = InitializeStore()
 }
 
 func TestStoreInit(t *testing.T) {
@@ -23,5 +22,7 @@ func TestInsertionAndRetrieval(t *testing.T) {
 
 	SaveUrlMapping(shortURL, initialLink, userUUId)
 
-	assert.Equal(t, initialLink, RetrieveInitialUrl(shortURL))
+	retrievedUrl := RetrieveInitiaUrl(shortURL)
+
+	assert.Equal(t, initialLink, retrievedUrl)
 }

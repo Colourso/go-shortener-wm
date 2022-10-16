@@ -8,10 +8,15 @@ import (
 	"os"
 )
 
-func GenerateShortLink(initialLink string, userId string) string {
-	urlHashBytes := sha256Of(initialLink + userId)
-	generatedNumber := new(big.Int).SetBytes(urlHashBytes).Uint64()
-	finalString := base58Encoded([]byte(fmt.Sprintf("%d", generatedNumber)))
+// 算法：
+// url+userId 进行sha256
+// 然后进行base58计算
+// 最后取base58的前8位作为短链接
+
+func GenerateShortLink(initiaLink string, userId string) string {
+	urlHashBytes := sha256Of(initiaLink + userId)
+	generatorNumber := new(big.Int).SetBytes(urlHashBytes).Uint64()
+	finalString := base58Encode([]byte(fmt.Sprintf("%d", generatorNumber)))
 	return finalString[:8]
 }
 
@@ -21,7 +26,7 @@ func sha256Of(input string) []byte {
 	return algorithm.Sum(nil)
 }
 
-func base58Encoded(bytes []byte) string {
+func base58Encode(bytes []byte) string {
 	encoding := base58.BitcoinEncoding
 	encoded, err := encoding.Encode(bytes)
 	if err != nil {

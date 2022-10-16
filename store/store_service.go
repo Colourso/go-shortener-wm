@@ -7,21 +7,26 @@ import (
 	"time"
 )
 
+type StorageService struct {
+	redisClient *redis.Client
+}
+
 var (
 	storeService = &StorageService{}
 	ctx          = context.Background()
 )
 
-const CacheDuration = 6 * time.Hour
+// Note that in a real world usage, the cache duration shouldn't have
+// an expiration time, an LRU policy config should be set where the
+// values that are retrieved less often are purged automatically from
+// the cache and stored back in RDBMS whenever the cache is full
 
-type StorageService struct {
-	redisClient *redis.Client
-}
+const CacheDuration = 6 * time.Hour
 
 func InitializeStore() *StorageService {
 	redisClient := redis.NewClient(&redis.Options{
-		Addr:     "localhost:6379",
-		Password: "",
+		Addr:     "127.0.0.1:6379",
+		Password: "4321",
 		DB:       0,
 	})
 
@@ -35,30 +40,17 @@ func InitializeStore() *StorageService {
 	return storeService
 }
 
-// if user id was not provided generate one on the fly : case for not logged in users
-
-/* We want to be able to save the mapping between the originalUrl
-and the generated shortUrl url
-*/
 func SaveUrlMapping(shortUrl string, originalUrl string, userId string) {
 	err := storeService.redisClient.Set(ctx, shortUrl, originalUrl, CacheDuration).Err()
 	if err != nil {
 		panic(fmt.Sprintf("Failed saving key url | Error: %v - shortUrl: %s - originalUrl: %s\n", err, shortUrl, originalUrl))
 	}
-
-	fmt.Printf("Saved shortUrl: %s - originalUrl: %s\n", shortUrl, originalUrl)
 }
 
-/*
-We should be able to retrieve the initial long URL once the short
-is provided. This is when users will be calling the shortlink in the
-url, so what we need to do here is to retrieve the long url and
-think about redirect.
-*/
 func RetrieveInitialUrl(shortUrl string) string {
 	result, err := storeService.redisClient.Get(ctx, shortUrl).Result()
 	if err != nil {
-		panic(fmt.Sprintf("Failed RetrieveInitialUrl url | Error: %v - shortUrl: %s\n", err, shortUrl))
+		panic(fmt.Sprintf("Failed RetrieveInitiaUrl | Error: %v - shortUrl: %s\n", err, shortUrl))
 	}
 	return result
 }
